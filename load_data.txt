@@ -1,0 +1,9 @@
+project/
+│
+├── load_data.js  # Script to load data
+├── db.js         # Database connection
+├── mock_data.json  # JSON file with mock data
+├── .env          # Environment variables
+└── package.json
+
+node load_data.js
