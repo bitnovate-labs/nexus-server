@@ -1,8 +1,8 @@
-module.exports = {
+export default {
   apps: [
     {
       name: "nexus-application",
-      script: "npm",
+      script: "server.js",
       args: "start",
       env: {
         NODE_ENV: "development",
