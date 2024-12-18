@@ -18,8 +18,8 @@ const app = express();
 // CORS Configuration
 app.use(
   cors({
-    // origin: "http://localhost:5173", // Vite dev server
-    origin: process.env.CLIENT_URL,
+    origin: "http://localhost:5173", // Vite dev server
+    // origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
