@@ -11,10 +11,9 @@ export const db = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  ssl: {
-    rejectUnauthorized: false, // Optional, depending on your RDS configuration
-  },
 });
+
+console.log("Connecting to database at:", process.env.DB_HOST);
 
 // Test database connection
 db.connect((err) => {

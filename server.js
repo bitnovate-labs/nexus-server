@@ -27,8 +27,6 @@ app.use(
 app.use(cookieParser());
 app.use(authMiddleware);
 
-console.log("testing");
-
 // File upload middleware - must be before Apollo Server middleware
 app.use(graphqlUploadExpress());
 
