@@ -3,7 +3,7 @@ export default {
     {
       name: "nexus-application",
       script: "npm",
-      args: "start",
+      args: "run start",
       env: {
         NODE_ENV: "development",
         ENV_VAR1: "environment_variable",
