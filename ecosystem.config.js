@@ -2,7 +2,7 @@ export default {
   apps: [
     {
       name: "nexus-application",
-      script: "./server.js",
+      script: "npm start",
       args: "start",
       env: {
         NODE_ENV: "development",
