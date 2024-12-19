@@ -9,17 +9,16 @@ import { resolvers } from "./resolvers/index.js";
 import { db } from "./db.js";
 import { authMiddleware } from "./middleware/auth.js";
 
-const PORT = process.env.PORT || 4000;
-
 dotenv.config();
+
+const PORT = process.env.PORT || 4000;
 
 const app = express();
 
 // CORS Configuration
 app.use(
   cors({
-    origin: "http://localhost:5173", // Vite dev server
-    // origin: process.env.CLIENT_URL,
+    origin: process.env.CLIENT_URL || "http://localhost:5173", // Vite dev server
     credentials: true,
   })
 );
