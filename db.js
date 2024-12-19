@@ -13,8 +13,6 @@ export const db = new Pool({
   port: process.env.DB_PORT,
 });
 
-console.log("Connecting to database at:", process.env.DB_HOST);
-
 // Test database connection
 db.connect((err) => {
   if (err) {
