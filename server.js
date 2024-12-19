@@ -30,6 +30,8 @@ app.use(authMiddleware);
 // File upload middleware - must be before Apollo Server middleware
 app.use(graphqlUploadExpress());
 
+console.log("test");
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
