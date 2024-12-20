@@ -18,9 +18,9 @@ const app = express();
 // CORS Configuration
 app.use(
   cors({
-    // origin: process.env.CLIENT_URL || "http://localhost:5173", // Vite dev server
-    // origin: "http://localhost:5173", // Vite dev server
-    origin: "https://main.d1zsmxq9mhh0yj.amplifyapp.com", // Vite dev server
+    // origin: process.env.CLIENT_URL || "http://localhost:5173", // AWS Amplify
+    // origin: "http://localhost:5173", // For local testing
+    origin: process.env.CLIENT_URL, // AWS Amplify Endpoint
     credentials: true,
   })
 );
