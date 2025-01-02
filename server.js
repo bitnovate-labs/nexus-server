@@ -40,6 +40,8 @@ const server = new ApolloServer({
   cors: false, // Disable Apollo Server's CORS as we're handling it with Express
 });
 
+console.log("testing");
+
 await server.start();
 
 server.applyMiddleware({
