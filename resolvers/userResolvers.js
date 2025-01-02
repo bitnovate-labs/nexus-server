@@ -92,12 +92,12 @@ export const userResolvers = {
 
       const user = result.rows[0];
       if (!user) {
-        throw new Error("Invalid credentials");
+        throw new Error("Invalid username");
       }
 
       const validPassword = await comparePasswords(password, user.password);
       if (!validPassword) {
-        throw new Error("Invalid credentials");
+        throw new Error("Invalid password");
       }
 
       const token = generateToken(user);
