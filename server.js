@@ -16,16 +16,16 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 
 // CORS Configuration
-app.use(
-  cors({
-    // origin: process.env.CLIENT_URL || "http://localhost:5173", // AWS Amplify
-    // origin: "http://localhost:5173", // For local testing
-    origin:
-      "http://nexus-dashboard-a0ooka2gl-timothys-projects-8a13be46.vercel.app", // For local testing
-    // origin: process.env.CLIENT_URL, // AWS Amplify Endpoint
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     // origin: process.env.CLIENT_URL || "http://localhost:5173", // AWS Amplify
+//     // origin: "http://localhost:5173", // For local testing
+//     // origin:
+//     //   "http://nexus-dashboard-a0ooka2gl-timothys-projects-8a13be46.vercel.app", // For local testing
+//     // origin: process.env.CLIENT_URL, // AWS Amplify Endpoint
+//     credentials: true,
+//   })
+// );
 
 app.use(cookieParser());
 app.use(authMiddleware);
