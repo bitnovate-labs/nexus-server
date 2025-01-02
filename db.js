@@ -5,13 +5,6 @@ dotenv.config();
 
 const { Pool } = pg;
 
-// export const db = new Pool({
-//   connectionString: process.env.DATABASE_URL,
-//   ssl: {
-//     rejectUnauthorized: false, // Required for cloud-hosted PostgreSQL
-//   },
-// });
-
 export const db = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -32,15 +25,3 @@ db.connect((err) => {
     console.log("Connected to database successfully");
   }
 });
-
-// -----------------------------------------------------------------
-
-// Test Supabase connection
-// db.query("SELECT NOW()", (err, res) => {
-//   if (err) {
-//     console.error("Connection test failed:", err);
-//   } else {
-//     console.log("Connection successful:", res.rows[0]);
-//   }
-//   db.end();
-// });
