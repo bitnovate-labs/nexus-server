@@ -9,6 +9,8 @@ import { userRoleResolvers } from "./userRoleResolvers.js";
 import { projectResolvers } from "./projectResolvers.js";
 import { authResolvers } from "./authResolvers.js";
 import { GraphQLUpload } from "graphql-upload-minimal";
+import { eventResolvers } from "./eventResolvers.js";
+import { eventAttachmentResolvers } from "./eventAttachmentResolvers.js";
 
 export const resolvers = {
   Upload: GraphQLUpload,
@@ -23,6 +25,8 @@ export const resolvers = {
     ...userRoleResolvers.Query,
     ...projectResolvers.Query,
     ...authResolvers.Query,
+    ...eventResolvers.Query,
+    ...eventAttachmentResolvers.Query,
   },
   Mutation: {
     ...userResolvers.Mutation,
@@ -34,6 +38,9 @@ export const resolvers = {
     ...stateResolvers.Mutation,
     ...userRoleResolvers.Mutation,
     ...projectResolvers.Mutation,
+    ...eventResolvers.Mutation,
+    ...eventAttachmentResolvers.Mutation,
+    ...eventAttachmentResolvers.Mutation,
   },
   User: {
     ...userResolvers.User,

@@ -23,6 +23,10 @@ const initializeDatabase = async () => {
       DROP TABLE IF EXISTS project_manager_commissions CASCADE;
       DROP TABLE IF EXISTS project_packages CASCADE;
       DROP TABLE IF EXISTS images CASCADE;
+      DROP TABLE IF EXISTS events CASCADE;
+      DROP TABLE IF EXISTS event_attachments CASCADE;
+      DROP TABLE IF EXISTS memos CASCADE;
+      DROP TABLE IF EXISTS memo_attachments CASCADE;
     `);
 
     // Create images table
@@ -359,6 +363,84 @@ const initializeDatabase = async () => {
         true,
       ]
     );
+
+    // Create events table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS events (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        name text NOT NULL,
+        date date NOT NULL,
+        time time,
+        venue text,
+        speaker text,
+        topic text,
+        limit_pax integer,
+        designation text,
+        branch text,
+        description text,
+        created_at timestamptz DEFAULT now(),
+        created_by text,
+        last_modified_at timestamptz DEFAULT now(),
+        last_modified_by text
+      );
+
+      CREATE INDEX IF NOT EXISTS events_date_idx ON events(date);
+      CREATE INDEX IF NOT EXISTS events_name_idx ON events(name);
+      CREATE INDEX IF NOT EXISTS events_branch_idx ON events(branch);
+      CREATE INDEX IF NOT EXISTS events_designation_idx ON events(designation);
+    `);
+
+    // Create event attachments table
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS event_attachments (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        event_id uuid REFERENCES events(id) ON DELETE CASCADE,
+        filename text NOT NULL,
+        content_type text NOT NULL,
+        size bigint NOT NULL,
+        url text NOT NULL,
+        created_at timestamptz DEFAULT now(),
+        created_by text,
+        last_modified_at timestamptz DEFAULT now(),
+        last_modified_by text
+      );
+
+      CREATE INDEX IF NOT EXISTS event_attachments_event_id_idx ON event_attachments(event_id);
+    `);
+
+    // Create memos table
+    await db.query(`
+      CREATE TABLE memos (
+        id SERIAL PRIMARY KEY,
+        date DATE NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        validity_from DATE,
+        validity_to DATE,
+        branch_id INTEGER REFERENCES branches(id),
+        designation_id INTEGER REFERENCES designations(id),
+        description TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create memo attachments table
+    await db.query(`
+      CREATE TABLE memo_attachments (
+        id SERIAL PRIMARY KEY,
+        memo_id INTEGER REFERENCES memos(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        content_type VARCHAR(255) NOT NULL,
+        size BIGINT NOT NULL,
+        url VARCHAR(255) NOT NULL,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
     console.log("Database initialized successfully");
     process.exit(0);

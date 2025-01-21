@@ -3,9 +3,12 @@ import { ApolloServer } from "apollo-server-express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
 import { graphqlUploadExpress } from "graphql-upload-minimal";
+// Graphql schema and resolvers
 import { typeDefs } from "./schema/index.js";
 import { resolvers } from "./resolvers/index.js";
+// Postgres database connection
 import { db } from "./db.js";
 import { authMiddleware } from "./middleware/auth.js";
 
@@ -26,8 +29,16 @@ app.use(
 app.use(cookieParser());
 app.use(authMiddleware);
 
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 // File upload middleware - must be before Apollo Server middleware
-app.use(graphqlUploadExpress());
+app.use(
+  graphqlUploadExpress({
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    maxFiles: 10,
+  })
+);
 
 const server = new ApolloServer({
   typeDefs,
