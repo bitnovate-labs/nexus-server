@@ -12,6 +12,7 @@ export const db = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
   ssl: {
+    // UNCOMMENT for local testing
     require: true,
     rejectUnauthorized: false, // Required for cloud-hosted PostgreSQL
   },
