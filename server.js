@@ -18,13 +18,13 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 
-// CORS Configuration (!!! UNCOMMENT for Local Testing)
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
+// CORS Configuration
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL,
+//     credentials: true,
+//   })
+// );
 
 app.use(cookieParser());
 app.use(authMiddleware);
