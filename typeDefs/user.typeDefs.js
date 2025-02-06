@@ -27,6 +27,7 @@ export const userTypeDefs = gql`
     login(username: String!, password: String!): AuthPayload!
     changePassword(oldPassword: String!, newPassword: String!): Boolean!
     uploadAvatar(file: Upload!): User!
+
     createUser(
       name: String!
       username: String!
@@ -36,6 +37,7 @@ export const userTypeDefs = gql`
       role: String
       active: Boolean!
     ): User!
+
     updateUser(
       id: ID!
       name: String
@@ -45,6 +47,7 @@ export const userTypeDefs = gql`
       role: String
       active: Boolean
     ): User!
+
     deleteUsers(ids: [ID!]!): Boolean!
   }
 `;

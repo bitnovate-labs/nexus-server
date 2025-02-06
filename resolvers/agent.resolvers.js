@@ -1,5 +1,3 @@
-import { finished } from "stream/promises";
-
 const validateRequiredFields = (args) => {
   const requiredFields = [
     { field: "name", message: "Name is required" },
@@ -60,8 +58,8 @@ export const agentResolvers = {
             a.ren_license as "renLicense",
             TO_CHAR(a.ren_expired_date, 'YYYY-MM-DD') as "renExpiredDate",
             b.name as branch,
-            a.leader,
-            a.recruiter,
+            a.leader_id AS "leaderId",
+            a.recruiter_id AS "recruiterId",
             d.name as designation,
             a.commission_percentage as "commissionPercentage",
             TO_CHAR(a.join_date, 'YYYY-MM-DD') as "joinDate",
@@ -71,7 +69,9 @@ export const agentResolvers = {
             a.leaderboard,
             a.active,
             a.remark,
-            a.avatar_id,
+            a.avatar_id as "avatarId",
+            a.created_by AS "createdBy",
+            a.last_modified_by AS "lastModifiedBy",
             CASE 
               WHEN i.data IS NOT NULL THEN 
                 concat('data:', i.mime_type, ';base64,', encode(i.data, 'base64'))
@@ -121,8 +121,8 @@ export const agentResolvers = {
             a.ren_license as "renLicense",
             TO_CHAR(a.ren_expired_date, 'YYYY-MM-DD') as "renExpiredDate",
             b.name as branch,
-            a.leader,
-            a.recruiter,
+            a.leader_id AS "leaderId",
+            a.recruiter_id AS "recruiterId",
             d.name as designation,
             a.commission_percentage as "commissionPercentage",
             TO_CHAR(a.join_date, 'YYYY-MM-DD') as "joinDate",
@@ -132,7 +132,9 @@ export const agentResolvers = {
             a.leaderboard,
             a.active,
             a.remark,
-            a.avatar_id,
+            a.avatar_id as "avatarId",
+            a.created_by AS "createdBy",
+            a.last_modified_by AS "lastModifiedBy",
             CASE 
               WHEN i.data IS NOT NULL THEN 
                 concat('data:', i.mime_type, ';base64,', encode(i.data, 'base64'))
@@ -255,16 +257,39 @@ export const agentResolvers = {
             `
             WITH inserted_agent AS (
               INSERT INTO agents (
-                name, display_name, nric_passport, email, mobile, address,
-                payee_name, payee_nric, payee_nric_type, bank, bank_account_no, swift_code,
-                ren_no, ren_license, ren_expired_date,
-                branch_id, leader, recruiter, designation_id, commission_percentage,
-                join_date, resign_date, income_tax_no, withholding_tax, leaderboard,
-                active, remark
+                name, 
+                display_name, 
+                nric_passport, 
+                email, 
+                mobile, 
+                address,
+                payee_name, 
+                payee_nric, 
+                payee_nric_type, 
+                bank, 
+                bank_account_no, 
+                swift_code,
+                ren_no, 
+                ren_license, 
+                ren_expired_date,
+                branch_id, 
+                leader_id, 
+                recruiter_id, 
+                designation_id, 
+                commission_percentage,
+                join_date, 
+                resign_date, 
+                income_tax_no, 
+                withholding_tax, 
+                leaderboard,
+                active, 
+                remark, 
+                created_by, 
+                last_modified_by
               ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 
                 $15::date, $16, $17, $18, $19, $20, $21::date, $22::date,
-                $23, $24, $25, $26, $27
+                $23, $24, $25, $26, $27, $28, $29
               )
               RETURNING *
             )
@@ -280,6 +305,8 @@ export const agentResolvers = {
             FROM inserted_agent a
             LEFT JOIN branches b ON a.branch_id = b.id
             LEFT JOIN designations d ON a.designation_id = d.id
+            LEFT JOIN agents l ON a.leader_id = l.id
+            LEFT JOIN agents r ON a.recruiter_id = r.id
             LEFT JOIN images i ON a.avatar_id = i.id`,
             [
               args.name,
@@ -298,8 +325,8 @@ export const agentResolvers = {
               args.renLicense,
               args.renExpiredDate,
               branchId,
-              args.leader,
-              args.recruiter,
+              args.leaderId,
+              args.recruiterId,
               designationId,
               args.commissionPercentage || 70,
               args.joinDate,
@@ -309,6 +336,8 @@ export const agentResolvers = {
               args.leaderboard ?? false,
               args.active ?? true,
               args.remark,
+              req.user.id,
+              req.user.id,
             ]
           );
 
@@ -367,8 +396,8 @@ export const agentResolvers = {
                 ren_license = $14,
                 ren_expired_date = $15::date,
                 branch_id = COALESCE($16, branch_id),
-                leader = $17,
-                recruiter = $18,
+                leader_id = $17,
+                recruiter_id = $18,
                 designation_id = COALESCE($19, designation_id),
                 commission_percentage = $20,
                 join_date = COALESCE($21::date, join_date),
@@ -377,8 +406,10 @@ export const agentResolvers = {
                 withholding_tax = COALESCE($24, withholding_tax),
                 leaderboard = COALESCE($25, leaderboard),
                 active = COALESCE($26, active),
-                remark = $27
-              WHERE id = $28
+                remark = $27,
+                last_modified_by = $28,
+                last_modified_at = CURRENT_TIMESTAMP
+              WHERE id = $29
               RETURNING id
             )
             SELECT 
@@ -394,6 +425,8 @@ export const agentResolvers = {
             JOIN agents a ON a.id = ua.id
             LEFT JOIN branches b ON a.branch_id = b.id
             LEFT JOIN designations d ON a.designation_id = d.id
+            LEFT JOIN agents l ON a.leader_id = l.id
+            LEFT JOIN agents r ON a.recruiter_id = r.id
             LEFT JOIN images i ON a.avatar_id = i.id`,
             [
               args.name,
@@ -412,8 +445,8 @@ export const agentResolvers = {
               args.renLicense,
               args.renExpiredDate,
               branchId,
-              args.leader,
-              args.recruiter,
+              args.leaderId,
+              args.recruiterId,
               designationId,
               args.commissionPercentage,
               args.joinDate,
@@ -423,6 +456,7 @@ export const agentResolvers = {
               args.leaderboard,
               args.active,
               args.remark,
+              req.user.id,
               id,
             ]
           );
@@ -457,6 +491,80 @@ export const agentResolvers = {
       } catch (error) {
         console.error("Database error:", error);
         throw new Error("Failed to delete agents");
+      }
+    },
+  },
+
+  Agent: {
+    leader: async (parent, _, { db }) => {
+      if (!parent.leaderId) return null; // Return null if there's no leaderId
+
+      try {
+        const result = await db.query(
+          `SELECT id, name FROM agents WHERE id = $1`,
+          [parent.leaderId]
+        );
+
+        return result.rows[0] || null;
+      } catch (error) {
+        console.error("Database error (leader):", error);
+        throw new Error("Failed to fetch leader");
+      }
+    },
+    recruiter: async (parent, _, { db }) => {
+      if (!parent.recruiterId) return null;
+
+      try {
+        const result = await db.query(
+          `SELECT id, name FROM agents WHERE id = $1`,
+          [parent.recruiterId]
+        );
+        return result.rows[0] || null;
+      } catch (error) {
+        console.error("Database error (recruiter):", error);
+        throw new Error("Failed to fetch recruiter");
+      }
+    },
+    createdBy: async (parent, _, { db }) => {
+      if (!parent.createdBy) {
+        return null; // Return null if createdBy is not set
+      }
+
+      try {
+        const result = await db.query(
+          `
+            SELECT id, name 
+            FROM users 
+            WHERE id = $1
+            `,
+          [parent.createdBy]
+        );
+
+        return result.rows[0] || null; // Return the user or null if not found
+      } catch (error) {
+        console.error("Database error (createdBy):", error);
+        throw new Error("Failed to fetch createdBy user");
+      }
+    },
+    lastModifiedBy: async (parent, _, { db }) => {
+      if (!parent.lastModifiedBy) {
+        return null; // Return null if lastModifiedById is not set
+      }
+
+      try {
+        const result = await db.query(
+          `
+            SELECT id, name 
+            FROM users 
+            WHERE id = $1
+            `,
+          [parent.lastModifiedBy]
+        );
+
+        return result.rows[0] || null;
+      } catch (error) {
+        console.error("Database error (lastModifiedBy):", error);
+        throw new Error("Failed to fetch lastModifiedBy user");
       }
     },
   },

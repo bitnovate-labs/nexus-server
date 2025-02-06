@@ -10,13 +10,39 @@ export const eventTypeDefs = gql`
     speaker: String
     topic: String
     limitPax: Int
-    designation: String
-    branch: String
+    designation: UserRole
+    branch: Branch
     description: String
-    createdAt: String
-    createdBy: String
-    lastModifiedAt: String
-    lastModifiedBy: String
+    createdBy: User!
+    lastModifiedBy: User!
+    attachments: [EventAttachment!]
+  }
+
+  type UserRole {
+    id: ID!
+    name: String!
+  }
+
+  type Branch {
+    id: ID!
+    name: String!
+  }
+
+  type User {
+    id: ID!
+    name: String!
+  }
+
+  type EventAttachment {
+    id: ID!
+    filename: String!
+    contentType: String!
+    size: Int!
+    url: String!
+    createdAt: String!
+    createdBy: User!
+    lastModifiedAt: String!
+    lastModifiedBy: User!
   }
 
   extend type Query {
@@ -33,8 +59,8 @@ export const eventTypeDefs = gql`
       speaker: String
       topic: String
       limitPax: Int
-      designation: String
-      branch: String
+      designationId: ID
+      branchId: ID
       description: String
     ): Event!
 
@@ -47,8 +73,8 @@ export const eventTypeDefs = gql`
       speaker: String
       topic: String
       limitPax: Int
-      designation: String
-      branch: String
+      designationId: ID
+      branchId: ID
       description: String
     ): Event!
 

@@ -7,9 +7,11 @@ const initializeDatabase = async () => {
     await db.query(`
       DROP TABLE IF EXISTS users CASCADE;
       DROP TABLE IF EXISTS agents CASCADE;
+      DROP TABLE IF EXISTS companies CASCADE;
       DROP TABLE IF EXISTS branches CASCADE;
       DROP TABLE IF EXISTS designations CASCADE;
       DROP TABLE IF EXISTS banks CASCADE;
+      DROP TABLE IF EXISTS bank_accounts CASCADE;
       DROP TABLE IF EXISTS developers CASCADE;
       DROP TABLE IF EXISTS states CASCADE;
       DROP TABLE IF EXISTS user_roles CASCADE;
@@ -22,11 +24,14 @@ const initializeDatabase = async () => {
       DROP TABLE IF EXISTS agent_commissions CASCADE;
       DROP TABLE IF EXISTS project_manager_commissions CASCADE;
       DROP TABLE IF EXISTS project_packages CASCADE;
+      DROP TABLE IF EXISTS purchasers CASCADE;
       DROP TABLE IF EXISTS images CASCADE;
       DROP TABLE IF EXISTS events CASCADE;
       DROP TABLE IF EXISTS event_attachments CASCADE;
       DROP TABLE IF EXISTS memos CASCADE;
       DROP TABLE IF EXISTS memo_attachments CASCADE;
+      DROP TABLE IF EXISTS taxes CASCADE;
+      DROP TABLE IF EXISTS sales_stages CASCADE;
     `);
 
     // Create images table
@@ -51,11 +56,16 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // ---------------------------------------------------------------------
     // Insert default user roles
     const defaultUserRoles = [
-      { code: "ADMIN", name: "Administrator", active: true },
-      { code: "MANAGER", name: "Manager", active: true },
-      { code: "USER", name: "User", active: true },
+      { code: "MANAGEMENT", name: "Management", active: true },
+      { code: "SENIOR_LEADER", name: "Senior Leader", active: true },
+      { code: "LEADER", name: "Leader", active: true },
+      { code: "PRE_LEADER", name: "Pre Leader", active: true },
+      { code: "AGENT", name: "Agent", active: true },
+      { code: "CREATE_SALES_ADMIN", name: "Create Sales Admin", active: true },
+      { code: "ADMIN", name: "Super Admin", active: true },
     ];
 
     for (const role of defaultUserRoles) {
@@ -64,6 +74,7 @@ const initializeDatabase = async () => {
         [role.code, role.name, role.active]
       );
     }
+    // ---------------------------------------------------------------------
 
     // Create users table with role reference
     await db.query(`
@@ -92,18 +103,6 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Insert default branches
-    const defaultBranches = [
-      { name: "Kuala Lumpur", maxAgents: 100, active: true },
-    ];
-
-    for (const branch of defaultBranches) {
-      await db.query(
-        `INSERT INTO branches (name, max_agents, active) VALUES ($1, $2, $3)`,
-        [branch.name, branch.maxAgents, branch.active]
-      );
-    }
-
     // Create designations table
     await db.query(`
       CREATE TABLE designations (
@@ -114,23 +113,6 @@ const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-
-    // Insert default designations
-    const defaultDesignations = [
-      { name: "Negotiator", rank: 1, active: true },
-      { name: "Pre Leader", rank: 2, active: true },
-      { name: "Team Leader", rank: 3, active: true },
-      { name: "Senior Leader", rank: 4, active: true },
-      { name: "Vice President", rank: 5, active: true },
-      { name: "Management", rank: 6, active: true },
-    ];
-
-    for (const designation of defaultDesignations) {
-      await db.query(
-        `INSERT INTO designations (name, rank, active) VALUES ($1, $2, $3)`,
-        [designation.name, designation.rank, designation.active]
-      );
-    }
 
     // Create agents table
     await db.query(`
@@ -152,8 +134,8 @@ const initializeDatabase = async () => {
         ren_license VARCHAR(255),
         ren_expired_date DATE,
         branch_id INTEGER REFERENCES branches(id),
-        leader VARCHAR(255),
-        recruiter VARCHAR(255),
+        leader_id INTEGER REFERENCES agents(id),
+        recruiter_id INTEGER REFERENCES agents(id),
         designation_id INTEGER REFERENCES designations(id),
         commission_percentage DECIMAL(5,2),
         join_date DATE NOT NULL,
@@ -164,8 +146,37 @@ const initializeDatabase = async () => {
         active BOOLEAN DEFAULT true,
         remark TEXT,
         avatar_id INTEGER REFERENCES images(id),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
       );
+    `);
+
+    // Create companies table
+    await db.query(`
+      CREATE TABLE companies (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        display_name VARCHAR(255) NOT NULL,
+        registration_no VARCHAR(255),
+        license_no VARCHAR(255),
+        income_tax_no VARCHAR(255),
+        address TEXT NOT NULL,
+        contact_no VARCHAR(50),
+        fax VARCHAR(50),
+        email VARCHAR(255),
+        website VARCHAR(255),
+        sst BOOLEAN NOT NULL DEFAULT true,
+        sst_no VARCHAR(255),
+        person_in_charge VARCHAR(255),
+        person_in_charge_nric VARCHAR(50),
+        person_in_charge_designation VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
+      );  
     `);
 
     // Create banks table
@@ -176,6 +187,24 @@ const initializeDatabase = async () => {
         swift_code VARCHAR(255),
         active BOOLEAN DEFAULT true,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create bank accounts table
+    await db.query(`
+      CREATE TABLE bank_accounts (
+        id SERIAL PRIMARY KEY,
+        company_id INTEGER REFERENCES companies(id) NOT NULL,
+        bank_id INTEGER REFERENCES banks(id) NOT NULL,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        bank_account_no VARCHAR(255),
+        bank_account_type VARCHAR(50) NOT NULL,
+        payment BOOLEAN NOT NULL,
+        receipt BOOLEAN NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
       );
     `);
 
@@ -203,11 +232,27 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // Create taxes table
+    await db.query(`
+      CREATE TABLE taxes (
+        id SERIAL PRIMARY KEY,
+        code VARCHAR(50) NOT NULL UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        tax_type VARCHAR(50) NOT NULL,
+        rate DECIMAL(5,2) NOT NULL,
+        tax_default BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
+      );
+    `);
+
     // Create projects table
     await db.query(`
       CREATE TABLE projects (
         id SERIAL PRIMARY KEY,
-        company VARCHAR(255) NOT NULL,
+        company_id INTEGER REFERENCES companies(id) NOT NULL,
         name VARCHAR(255) NOT NULL,
         developer_id INTEGER REFERENCES developers(id),
         developer_pay_tax BOOLEAN DEFAULT false,
@@ -270,8 +315,8 @@ const initializeDatabase = async () => {
         to_date DATE NOT NULL,
         min_unit INTEGER NOT NULL,
         max_unit INTEGER NOT NULL,
-        commission_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('percentage', 'RM')),
-        commission_value INTEGER NOT NULL,
+        commission_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('PERCENTAGE', 'RM')),
+        commission_value DECIMAL(10,2) NOT NULL,
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_modified_by INTEGER REFERENCES users(id),
@@ -284,16 +329,16 @@ const initializeDatabase = async () => {
       CREATE TABLE agent_commissions (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-        commission_scheme_id INTEGER REFERENCES project_commission_schemes(id) NOT NULL,
+        commission_scheme_id INTEGER REFERENCES project_commission_schemes(id),
         sales_commission_type VARCHAR(50) NOT NULL CHECK (
-          sales_commission_type IN ('project_overriding', 'upline_overriding')
+          sales_commission_type IN ('PROJECT_OVERRIDING', 'UPLINE_OVERRIDING')
         ),
         designation_id INTEGER REFERENCES designations(id),
-        commission_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('percentage', 'RM')),
-        commission_value INTEGER NOT NULL,
+        commission_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('PERCENTAGE', 'RM')),
+        commission_value DECIMAL(10,2) NOT NULL,
         overriding BOOLEAN DEFAULT false,
-        schedule_payment_type VARCHAR(50) CHECK (schedule_payment_type IN ('percentage', 'RM')),
-        schedule_payment_value INTEGER,
+        schedule_payment_type VARCHAR(50) CHECK (schedule_payment_type IN ('PERCENTAGE', 'RM')),
+        schedule_payment_value DECIMAL(10,2),
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_modified_by INTEGER REFERENCES users(id),
@@ -306,18 +351,18 @@ const initializeDatabase = async () => {
       CREATE TABLE project_manager_commissions (
         id SERIAL PRIMARY KEY,
         project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-        commission_scheme_id INTEGER REFERENCES project_commission_schemes(id) NOT NULL,
+        commission_scheme_id INTEGER REFERENCES project_commission_schemes(id),
         from_date DATE NOT NULL,
         to_date DATE NOT NULL,
-        commission_type VARCHAR(50) NOT NULL DEFAULT 'none' CHECK (
-          commission_type IN ('none', 'project_manager_overriding')
+        sales_commission_type VARCHAR(50) NOT NULL DEFAULT 'NONE' CHECK (
+          sales_commission_type IN ('NONE', 'PROJECT_MANAGER_OVERRIDING')
         ),
         agent_id INTEGER REFERENCES agents(id) NOT NULL,
-        commission_value_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('percentage', 'RM')),
-        commission_value INTEGER NOT NULL,
-        overriding BOOLEAN NOT NULL,
-        schedule_payment_type VARCHAR(50) CHECK (schedule_payment_type IN ('percentage', 'RM')),
-        schedule_payment_value INTEGER,
+        commission_type VARCHAR(50) NOT NULL CHECK (commission_type IN ('PERCENTAGE', 'RM')),
+        commission_value DECIMAL(10,2) NOT NULL,
+        overriding BOOLEAN DEFAULT false,
+        schedule_payment_type VARCHAR(50) CHECK (schedule_payment_type IN ('PERCENTAGE', 'RM')),
+        schedule_payment_value DECIMAL(10,2),
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_modified_by INTEGER REFERENCES users(id),
@@ -325,30 +370,7 @@ const initializeDatabase = async () => {
       );
     `);
 
-    // Create project packages table
-    await db.query(`
-      CREATE TABLE project_packages (
-        id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
-        package_name VARCHAR(255) NOT NULL,
-        date_from DATE NOT NULL,
-        date_to DATE NOT NULL,
-        deduct_from VARCHAR(50) NOT NULL DEFAULT 'none' CHECK (
-          deduct_from IN ('none', 'gross', 'nett')
-        ),
-        amount_type VARCHAR(50) NOT NULL CHECK (amount_type IN ('percentage', 'RM')),
-        amount_value INTEGER NOT NULL,
-        deduct_type VARCHAR(50) NOT NULL DEFAULT 'none' CHECK (
-          deduct_type IN ('none', 'rebate', 'discount')
-        ),
-        display_sequence INTEGER NOT NULL,
-        created_by INTEGER REFERENCES users(id),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        last_modified_by INTEGER REFERENCES users(id),
-        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
+    // ---------------------------------------------------------------------
     // Create default admin user
     const hashedPassword = await bcrypt.hash("admin123", 10);
     await db.query(
@@ -363,49 +385,44 @@ const initializeDatabase = async () => {
         true,
       ]
     );
+    // ---------------------------------------------------------------------
+
+    // Create purchasers table
+    await db.query(`
+      CREATE TABLE purchasers (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        registration_no VARCHAR(255) NOT NULL,
+        address TEXT,
+        contact_person VARCHAR(255),
+        contact_no VARCHAR(50),
+        email VARCHAR(255) UNIQUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
+      );
+    `);
 
     // Create events table
     await db.query(`
-      CREATE TABLE IF NOT EXISTS events (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        name text NOT NULL,
-        date date NOT NULL,
-        time time,
-        venue text,
-        speaker text,
-        topic text,
-        limit_pax integer,
-        designation text,
-        branch text,
-        description text,
-        created_at timestamptz DEFAULT now(),
-        created_by text,
-        last_modified_at timestamptz DEFAULT now(),
-        last_modified_by text
+      CREATE TABLE events (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        date DATE NOT NULL,
+        time TIME,
+        venue VARCHAR(255),
+        speaker VARCHAR(50),
+        topic VARCHAR(255),
+        limit_pax INTEGER,
+        designation_id INTEGER REFERENCES user_roles(id),
+        branch_id INTEGER REFERENCES branches(id),
+        description TEXT,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
-
-      CREATE INDEX IF NOT EXISTS events_date_idx ON events(date);
-      CREATE INDEX IF NOT EXISTS events_name_idx ON events(name);
-      CREATE INDEX IF NOT EXISTS events_branch_idx ON events(branch);
-      CREATE INDEX IF NOT EXISTS events_designation_idx ON events(designation);
-    `);
-
-    // Create event attachments table
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS event_attachments (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        event_id uuid REFERENCES events(id) ON DELETE CASCADE,
-        filename text NOT NULL,
-        content_type text NOT NULL,
-        size bigint NOT NULL,
-        url text NOT NULL,
-        created_at timestamptz DEFAULT now(),
-        created_by text,
-        last_modified_at timestamptz DEFAULT now(),
-        last_modified_by text
-      );
-
-      CREATE INDEX IF NOT EXISTS event_attachments_event_id_idx ON event_attachments(event_id);
     `);
 
     // Create memos table
@@ -416,9 +433,9 @@ const initializeDatabase = async () => {
         title VARCHAR(255) NOT NULL,
         validity_from DATE,
         validity_to DATE,
+        description TEXT,
         branch_id INTEGER REFERENCES branches(id),
         designation_id INTEGER REFERENCES designations(id),
-        description TEXT,
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_modified_by INTEGER REFERENCES users(id),
@@ -439,6 +456,21 @@ const initializeDatabase = async () => {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         last_modified_by INTEGER REFERENCES users(id),
         last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create sales_stages table
+    await db.query(`
+      CREATE TABLE sales_stages (
+        id SERIAL PRIMARY KEY,
+        sales_type VARCHAR(50) NOT NULL CHECK (sales_type IN ('NONE', 'SUBSALES', 'RENT', 'PROJECT')),
+        name VARCHAR(255) NOT NULL,
+        level INTEGER NOT NULL,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        created_by INTEGER REFERENCES users(id),
+        last_modified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        last_modified_by INTEGER REFERENCES users(id)
       );
     `);
 

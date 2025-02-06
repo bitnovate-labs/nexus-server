@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { graphqlUploadExpress } from "graphql-upload-minimal";
 // Graphql schema and resolvers
-import { typeDefs } from "./schema/index.js";
+import { typeDefs } from "./typeDefs/index.js";
 import { resolvers } from "./resolvers/index.js";
 // Postgres database connection
 import { db } from "./db.js";
@@ -19,12 +19,12 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 
 // CORS Configuration (uncomment for Local Testing)
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: process.env.CLIENT_URL,
+//     credentials: true,
+//   })
+// );
 
 app.use(cookieParser());
 app.use(authMiddleware);

@@ -1,16 +1,27 @@
-import { userResolvers } from "./userResolvers.js";
-import { agentResolvers } from "./agentResolvers.js";
 import { branchResolvers } from "./branchResolvers.js";
 import { designationResolvers } from "./designationResolvers.js";
 import { bankResolvers } from "./bankResolvers.js";
 import { developerResolvers } from "./developerResolvers.js";
 import { stateResolvers } from "./stateResolvers.js";
 import { userRoleResolvers } from "./userRoleResolvers.js";
-import { projectResolvers } from "./projectResolvers.js";
 import { authResolvers } from "./authResolvers.js";
 import { GraphQLUpload } from "graphql-upload-minimal";
 import { eventResolvers } from "./eventResolvers.js";
-import { eventAttachmentResolvers } from "./eventAttachmentResolvers.js";
+import { memoResolvers } from "./memoResolvers.js";
+import { companyResolvers } from "./companyResolvers.js";
+import { bankAccountResolvers } from "./bankAccountResolvers.js";
+import { taxResolvers } from "./taxResolvers.js";
+
+import { agentResolvers } from "./agent.resolvers.js";
+import { agentCommissionResolvers } from "./agentCommission.resolvers.js";
+import { projectResolvers } from "./projects/project.resolvers.js";
+import { projectUnitTypeResolvers } from "./projects/project.unitTypes.resolvers.js";
+import { projectScheduleResolvers } from "./projects/project.schedule.resolvers.js";
+import { projectCommissionSchemeResolvers } from "./projects/project.commissionScheme.resolvers.js";
+import { projectManagerCommissionResolvers } from "./projects/project.managerCommission.resolvers.js";
+import { purchasersResolvers } from "./purchasers.resolvers.js";
+import { salesStageResolvers } from "./salesStage.resolvers.js";
+import { userResolvers } from "./user.resolvers.js";
 
 export const resolvers = {
   Upload: GraphQLUpload,
@@ -23,10 +34,21 @@ export const resolvers = {
     ...developerResolvers.Query,
     ...stateResolvers.Query,
     ...userRoleResolvers.Query,
-    ...projectResolvers.Query,
     ...authResolvers.Query,
     ...eventResolvers.Query,
-    ...eventAttachmentResolvers.Query,
+    ...memoResolvers.Query,
+    ...companyResolvers.Query,
+    ...bankAccountResolvers.Query,
+    ...taxResolvers.Query,
+
+    ...agentCommissionResolvers.Query,
+    ...projectResolvers.Query,
+    ...projectUnitTypeResolvers.Query,
+    ...projectScheduleResolvers.Query,
+    ...projectCommissionSchemeResolvers.Query,
+    ...projectManagerCommissionResolvers.Query,
+    ...salesStageResolvers.Query,
+    ...purchasersResolvers.Query,
   },
   Mutation: {
     ...userResolvers.Mutation,
@@ -37,12 +59,49 @@ export const resolvers = {
     ...developerResolvers.Mutation,
     ...stateResolvers.Mutation,
     ...userRoleResolvers.Mutation,
-    ...projectResolvers.Mutation,
     ...eventResolvers.Mutation,
-    ...eventAttachmentResolvers.Mutation,
-    ...eventAttachmentResolvers.Mutation,
+    ...memoResolvers.Mutation,
+    ...companyResolvers.Mutation,
+    ...bankAccountResolvers.Mutation,
+    ...taxResolvers.Mutation,
+
+    ...agentCommissionResolvers.Mutation,
+    ...projectResolvers.Mutation,
+    ...projectUnitTypeResolvers.Mutation,
+    ...projectScheduleResolvers.Mutation,
+    ...projectCommissionSchemeResolvers.Mutation,
+    ...projectManagerCommissionResolvers.Mutation,
+    ...salesStageResolvers.Mutation,
+    ...purchasersResolvers.Mutation,
   },
   User: {
     ...userResolvers.User,
+  },
+  Project: {
+    ...projectResolvers.Project,
+  },
+  ProjectUnitType: {
+    ...projectUnitTypeResolvers.ProjectUnitType,
+  },
+  ProjectSchedule: {
+    ...projectScheduleResolvers.ProjectSchedule,
+  },
+  ProjectCommissionScheme: {
+    ...projectCommissionSchemeResolvers.ProjectCommissionScheme,
+  },
+  AgentCommission: {
+    ...agentCommissionResolvers.AgentCommission,
+  },
+  ProjectManagerCommission: {
+    ...projectManagerCommissionResolvers.ProjectManagerCommission,
+  },
+  SalesStage: {
+    ...salesStageResolvers.SalesStage,
+  },
+  Purchaser: {
+    ...purchasersResolvers.Purchaser,
+  },
+  Agent: {
+    ...agentResolvers.Agent,
   },
 };

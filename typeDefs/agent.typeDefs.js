@@ -5,7 +5,6 @@ export const agentTypeDefs = gql`
 
   type Agent {
     id: ID!
-    # Personal Info
     name: String!
     displayName: String
     nricPassport: String
@@ -13,24 +12,20 @@ export const agentTypeDefs = gql`
     mobile: String
     address: String
     avatarUrl: String
-
-    # Banking Info
     payeeName: String
     payeeNric: String
     payeeNricType: String
     bank: String
     bankAccountNo: String
     swiftCode: String
-
-    # REN Tag
     renNo: String
     renLicense: String
     renExpiredDate: String
-
-    # General Info
     branch: String
-    leader: String
-    recruiter: String
+    leaderId: ID
+    recruiterId: ID
+    leader: Agent
+    recruiter: Agent
     designation: String
     commissionPercentage: Float
     joinDate: String
@@ -40,6 +35,8 @@ export const agentTypeDefs = gql`
     leaderboard: Boolean
     active: Boolean
     remark: String
+    createdBy: User
+    lastModifiedBy: User
   }
 
   extend type Query {
@@ -50,31 +47,24 @@ export const agentTypeDefs = gql`
   extend type Mutation {
     uploadAgentAvatar(id: ID!, file: Upload!): Agent!
     createAgent(
-      # Personal Info
       name: String!
       displayName: String
       nricPassport: String
       email: String
       mobile: String
       address: String
-
-      # Banking Info
       payeeName: String
       payeeNric: String
       payeeNricType: String
       bank: String
       bankAccountNo: String
       swiftCode: String
-
-      # REN Tag
       renNo: String
       renLicense: String
       renExpiredDate: String
-
-      # General Info
       branch: String
-      leader: String
-      recruiter: String
+      leaderId: ID
+      recruiterId: ID
       designation: String
       commissionPercentage: Float
       joinDate: String
@@ -84,35 +74,30 @@ export const agentTypeDefs = gql`
       leaderboard: Boolean
       active: Boolean
       remark: String
+      createdBy: ID
+      lastModifiedBy: ID
     ): Agent!
 
     updateAgent(
       id: ID!
-      # Personal Info
       name: String
       displayName: String
       nricPassport: String
       email: String
       mobile: String
       address: String
-
-      # Banking Info
       payeeName: String
       payeeNric: String
       payeeNricType: String
       bank: String
       bankAccountNo: String
       swiftCode: String
-
-      # REN Tag
       renNo: String
       renLicense: String
       renExpiredDate: String
-
-      # General Info
       branch: String
-      leader: String
-      recruiter: String
+      leaderId: ID
+      recruiterId: ID
       designation: String
       commissionPercentage: Float
       joinDate: String
@@ -122,6 +107,8 @@ export const agentTypeDefs = gql`
       leaderboard: Boolean
       active: Boolean
       remark: String
+      createdBy: ID
+      lastModifiedBy: ID
     ): Agent!
 
     deleteAgents(ids: [ID!]!): Boolean!

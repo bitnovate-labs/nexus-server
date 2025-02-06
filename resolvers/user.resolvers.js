@@ -15,7 +15,7 @@ export const userResolvers = {
     agent: async (parent, _, { db }) => {
       const result = await db.query(
         `
-        SELECT leader, recruiter
+        SELECT leader_id, recruiter_id
         FROM agents
         WHERE email = $1
       `,
@@ -49,7 +49,7 @@ export const userResolvers = {
         LEFT JOIN images i ON u.avatar_id = i.id
         WHERE u.id = $1
       `,
-        [req.user.userId]
+        [req.user.id]
       );
 
       const user = result.rows[0];
@@ -128,7 +128,7 @@ export const userResolvers = {
         // Get current user's password
         const result = await db.query(
           "SELECT password FROM users WHERE id = $1",
-          [req.user.userId]
+          [req.user.id]
         );
 
         const user = result.rows[0];
@@ -151,7 +151,7 @@ export const userResolvers = {
         // Update password
         await db.query("UPDATE users SET password = $1 WHERE id = $2", [
           hashedNewPassword,
-          req.user.userId,
+          req.user.id,
         ]);
 
         return true;
@@ -283,7 +283,7 @@ export const userResolvers = {
               FROM images
               WHERE id = $1
             ) as mime_type`,
-          [imageResult.rows[0].id, req.user.userId]
+          [imageResult.rows[0].id, req.user.id]
         );
 
         const user = result.rows[0];

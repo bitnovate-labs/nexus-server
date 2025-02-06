@@ -10,11 +10,24 @@ export const memoTypeDefs = gql`
     branch: Branch
     designation: Designation
     description: String
-    createdAt: String!
     createdBy: User!
-    lastModifiedAt: String!
     lastModifiedBy: User!
     attachments: [MemoAttachment!]
+  }
+
+  type Branch {
+    id: ID!
+    name: String!
+  }
+
+  type Designation {
+    id: ID!
+    name: String!
+  }
+
+  type User {
+    id: ID!
+    name: String!
   }
 
   type MemoAttachment {
@@ -43,7 +56,7 @@ export const memoTypeDefs = gql`
       branchId: ID
       designationId: ID
       description: String
-    ): Memo
+    ): Memo!
 
     updateMemo(
       id: ID!
@@ -54,7 +67,7 @@ export const memoTypeDefs = gql`
       branchId: ID
       designationId: ID
       description: String
-    ): Memo
+    ): Memo!
 
     deleteMemos(ids: [ID!]!): Boolean!
   }

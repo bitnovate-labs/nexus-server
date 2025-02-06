@@ -5,7 +5,7 @@ import { AUTH_CONFIG } from "../config/auth.js";
 export const generateToken = (user) => {
   return jwt.sign(
     {
-      userId: user.id,
+      id: user.id,
       role: user.role,
       username: user.username,
     },
